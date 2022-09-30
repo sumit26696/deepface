@@ -8,6 +8,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from flask import Flask, jsonify, request, make_response
 
+from Crypto.Hash import keccak
+
 import argparse
 import uuid
 import json
@@ -112,6 +114,33 @@ def analyzeWrapper(req, trx_id = 0):
 
 @app.route('/verify', methods=['POST'])
 def verify():
+
+	global graph
+
+	tic = time.time()
+	req = request.get_json()
+	trx_id = uuid.uuid4()
+
+	resp_obj = jsonify({'success': False})
+
+	if tf_version == 1:
+		with graph.as_default():
+			resp_obj = verifyWrapper(req, trx_id)
+	elif tf_version == 2:
+		resp_obj = verifyWrapper(req, trx_id)
+
+	#--------------------------
+
+	toc =  time.time()
+
+	resp_obj["trx_id"] = trx_id
+	resp_obj["seconds"] = toc-tic
+
+	return resp_obj, 200
+
+
+@app.route('/getHash', methods=['POST'])
+def getFaceHash():
 
 	global graph
 
